@@ -1,6 +1,5 @@
 #include <avr/sleep.h>
 #include <GSM.h>
-//TODO: Read from A0 the voltage of the battery(0 - 20.48V)
 
 #define MEASURING_DEVICES 5
 #define END_SYMBOL '\0'
