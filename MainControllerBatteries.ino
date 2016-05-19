@@ -2,11 +2,14 @@
 #include <GSM.h>
 //TODO: Read from A0 the voltage of the battery(0 - 20.48V)
 
+#define MEASURING_DEVICES 5
+#define END_SYMBOL '\0'
 #define GSM_PIN 5
 #define GPRS_APN ""
 #define GPRS_LOGIN ""
 #define GPRS_PASSWORD ""
 
+SoftwareSerial dataSerial(2, 3);
 GSMClient client;
 GPRS gprs;
 GSM gsmAccess;
@@ -17,13 +20,44 @@ const char server[] = "arduino.cc"; // Example
 const char path[] = "/data";
 int port = 3000;
 
+void setup()
+{
+  pinMode(wakePin, INPUT);
+  Serial.begin(9600);
+  dataSerial.begin(4800);
+  attachInterrupt(0, wakeUpNow, CHANGE);
+}
+
+String getDeviceData(int index) {
+  String res = "";
+  dataSerial.write(String(index));
+
+  while(dataSerial.available()) {
+    char readByte = (char)Serial.read();
+
+    if(readByte == END_SYMBOL) {
+      break;
+    }
+    
+    res += readByte;
+  }
+
+  return res;
+}
+
+String getData() {
+  String res = "";
+  
+  for(int i = 0; i < MEASURING_DEVICES; i++) {
+    res += getDeviceData(i);
+  }
+
+  return res;
+}
+
 void wakeUpNow()
 {
-  // Check each battery
-  String data = "";
-
-  // Send data
-  sendData(data);
+  sendData(getData());
 }
 
 void sendData(const String data) {
@@ -64,13 +98,6 @@ void sendData(const String data) {
   }
 }
  
-void setup()
-{
-  pinMode(wakePin, INPUT);
-  Serial.begin(9600);
-  attachInterrupt(0, wakeUpNow, CHANGE);
-}
- 
 void sleepNow()
 {
     sleep_enable();
@@ -84,11 +111,6 @@ void sleepNow()
  
 void loop()
 {
-  if (Serial.available()) {
-    Serial.write(Serial.read());
-  }
-  
-  delay(1000);
   Serial.println("Timer: Entering Sleep mode");
   delay(100);
   sleepNow();
