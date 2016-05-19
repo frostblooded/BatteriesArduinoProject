@@ -28,20 +28,10 @@ void setup()
 }
 
 String getDeviceData(int index) {
-  String res = "";
   dataSerial.write(String(index));
-
-  while(dataSerial.available()) {
-    char readByte = (char)Serial.read();
-
-    if(readByte == END_SYMBOL) {
-      break;
-    }
-    
-    res += readByte;
-  }
-
-  return res;
+  
+  while(!dataSerial.available()) {sleep(100)};
+  return dataSerial.readString();
 }
 
 String getData() {
@@ -110,7 +100,7 @@ void sleepNow()
  
 void loop()
 {
-  Serial.println("Timer: Entering Sleep mode");
+  Serial.println("Entering Sleep mode");
   delay(100);
   sleepNow();
 }
