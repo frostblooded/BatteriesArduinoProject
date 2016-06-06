@@ -1,6 +1,5 @@
 #include <avr/sleep.h>
 #include <GSM.h>
-#include <AltSoftSerial.h>
 
 #define MEASURING_DEVICES 5
 #define END_SYMBOL '\0'
