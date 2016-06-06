@@ -2,8 +2,7 @@
 #include <GSM.h>
 
 #define MEASURING_DEVICES 5
-#define END_SYMBOL '\0'
-#define GSM_PIN 5
+#define GSM_PIN "5"
 #define GPRS_APN ""
 #define GPRS_LOGIN ""
 #define GPRS_PASSWORD ""
@@ -11,7 +10,7 @@
 GSMClient client;
 GPRS gprs;
 GSM gsmAccess;
- 
+
 // Pin for getting woken up by RTC
 int wakePin = 2;
 int sleepStatus = 0;
@@ -31,23 +30,25 @@ void setup()
 
 String getDeviceData(int index) {
   Serial.print(String(index));
-  
-  while(!Serial.available()) {delay(50);}
+
+  while (!Serial.available()) {
+    delay(50);
+  }
   return Serial.readString();
 }
 
 void wakeUpNow()
 {
-  for(int i = 0; i < MEASURING_DEVICES; i++)
+  for (int i = 0; i < MEASURING_DEVICES; i++)
     sendData(getDeviceData(i));
 
   notConnected = true;
 }
 
 void sendData(const String data) {
-  while(notConnected)
+  while (notConnected)
   {
-    if((gsmAccess.begin((char*)"5") == GSM_READY) &
+    if ((gsmAccess.begin(GSM_PIN) == GSM_READY) &
         (gprs.attachGPRS((char*)GPRS_APN, (char*)GPRS_LOGIN, (char*)GPRS_PASSWORD) == GPRS_READY))
       notConnected = false;
     else
@@ -68,17 +69,17 @@ void sendData(const String data) {
     client.println();
   }
 }
- 
+
 void sleepNow()
 {
-    sleep_enable();
-    attachInterrupt(0, wakeUpNow, CHANGE);
-    sleep_mode();
-    sleep_disable();
-    detachInterrupt(0);
- 
+  sleep_enable();
+  attachInterrupt(0, wakeUpNow, CHANGE);
+  sleep_mode();
+  sleep_disable();
+  detachInterrupt(0);
+
 }
- 
+
 void loop()
 {
   delay(100);
