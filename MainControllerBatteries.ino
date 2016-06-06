@@ -1,5 +1,6 @@
 #include <avr/sleep.h>
 #include <GSM.h>
+#include <AltSoftSerial.h>
 
 #define MEASURING_DEVICES 5
 #define END_SYMBOL '\0'
@@ -33,9 +34,9 @@ void setup()
 }
 
 String getDeviceData(int index) {
-  dataSerial.write(String(index));
+  dataSerial.print(String(index));
   
-  while(!dataSerial.available()) {sleep(50)};
+  while(!dataSerial.available()) {delay(50);}
   return dataSerial.readString();
 }
 
@@ -50,8 +51,8 @@ void wakeUpNow()
 void sendData(const String data) {
   while(notConnected)
   {
-    if((gsmAccess.begin("5") == GSM_READY) &
-        (gprs.attachGPRS(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD) == GPRS_READY))
+    if((gsmAccess.begin((char*)"5") == GSM_READY) &
+        (gprs.attachGPRS((char*)GPRS_APN, (char*)GPRS_LOGIN, (char*)GPRS_PASSWORD) == GPRS_READY))
       notConnected = false;
     else
     {
@@ -85,7 +86,6 @@ void sleepNow()
 {
     sleep_enable();
     attachInterrupt(0, wakeUpNow, CHANGE);
-    analogReference(INTERNAL);
     sleep_mode();
     sleep_disable();
     detachInterrupt(0);
