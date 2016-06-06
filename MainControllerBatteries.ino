@@ -8,50 +8,46 @@
 #define GPRS_LOGIN ""
 #define GPRS_PASSWORD ""
 
-SoftwareSerial dataSerial(2, 3);
+// Software serial for GSM communication
+SoftwareSerial dataSerial(3, 4);
 GSMClient client;
 GPRS gprs;
 GSM gsmAccess;
  
+// Pin for getting woken up by RTC
 int wakePin = 2;
 int sleepStatus = 0;
-const char server[] = "arduino.cc"; // Example
+const char server[] = "arduino.cc"; // Not actual server
 const char path[] = "/data";
 int port = 3000;
+
+// Used for GSM connection
+boolean notConnected = true;
 
 void setup()
 {
   pinMode(wakePin, INPUT);
   Serial.begin(9600);
-  dataSerial.begin(4800);
+  dataSerial.begin(9600);
   attachInterrupt(0, wakeUpNow, CHANGE);
 }
 
 String getDeviceData(int index) {
   dataSerial.write(String(index));
   
-  while(!dataSerial.available()) {sleep(100)};
+  while(!dataSerial.available()) {sleep(50)};
   return dataSerial.readString();
-}
-
-String getData() {
-  String res = "";
-  
-  for(int i = 0; i < MEASURING_DEVICES; i++) {
-    res += getDeviceData(i);
-  }
-
-  return res;
 }
 
 void wakeUpNow()
 {
-  sendData(getData());
+  for(int i = 0; i < MEASURING_DEVICES; i++)
+    sendData(getDeviceData(i));
+
+  notConnected = true;
 }
 
 void sendData(const String data) {
-  boolean notConnected = true;
-
   while(notConnected)
   {
     if((gsmAccess.begin("5") == GSM_READY) &
@@ -82,9 +78,7 @@ void sendData(const String data) {
     client.println();
   } 
   else
-  {
     Serial.println("connection failed");
-  }
 }
  
 void sleepNow()
