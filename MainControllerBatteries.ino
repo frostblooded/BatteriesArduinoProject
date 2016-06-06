@@ -1,7 +1,7 @@
 #include <avr/sleep.h>
 #include <GSM.h>
 
-#define MEASURING_DEVICES 5
+#define MEASURING_DEVICES 5 // How many batteries are connected
 #define GSM_PIN "5"
 #define GPRS_APN ""
 #define GPRS_LOGIN ""
@@ -16,29 +16,32 @@ int wakePin = 2;
 int sleepStatus = 0;
 const char server[] = "arduino.cc"; // Not actual server
 const char path[] = "/data";
-int port = 3000;
+int port = 8080;
 
 // Used for GSM connection
 boolean notConnected = true;
 
 void setup()
 {
-  pinMode(wakePin, INPUT);
-  Serial.begin(9600);
-  attachInterrupt(0, wakeUpNow, CHANGE);
+  pinMode(wakePin, INPUT); // Pin for waking up
+  attachInterrupt(0, wakeUpNow, CHANGE); // Wake up on voltage change
+  Serial.begin(1200);
 }
 
 String getDeviceData(int index) {
   Serial.print(String(index));
 
-  while (!Serial.available()) {
+  while (!Serial.available())
     delay(50);
-  }
+
   return Serial.readString();
 }
 
 void wakeUpNow()
 {
+  // Get data for each battery and send it to server.
+  // It sends batteries one by one, because it is easier
+  // than sending an array.
   for (int i = 0; i < MEASURING_DEVICES; i++)
     sendData(getDeviceData(i));
 
@@ -48,6 +51,7 @@ void wakeUpNow()
 void sendData(const String data) {
   while (notConnected)
   {
+    // Login to GSM module
     if ((gsmAccess.begin(GSM_PIN) == GSM_READY) &
         (gprs.attachGPRS((char*)GPRS_APN, (char*)GPRS_LOGIN, (char*)GPRS_PASSWORD) == GPRS_READY))
       notConnected = false;
@@ -57,7 +61,7 @@ void sendData(const String data) {
 
   if (client.connect(server, port))
   {
-    // Make a HTTP request:
+    // Make a HTTP POST request to server
     client.print("POST ");
     client.print(path);
     client.print(" HTTP/1.1\nContent-Type: application/json\nContent-Length: ");
@@ -70,6 +74,7 @@ void sendData(const String data) {
   }
 }
 
+// Go to sleep
 void sleepNow()
 {
   sleep_enable();
@@ -80,6 +85,7 @@ void sleepNow()
 
 }
 
+// Program comes here after wakeUpNow() and goes to sleep after a sligh delay
 void loop()
 {
   delay(100);
